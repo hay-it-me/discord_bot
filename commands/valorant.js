@@ -5,6 +5,15 @@ const fs = require('fs');
 const { match } = require('assert');
 
 
+function formatAsPercent(num) {
+    return new Intl.NumberFormat('default', {
+      style: 'percent',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    }).format(num / 100);
+}
+
+
 module.exports = async function(msg) {
     let account = 'couchpohtehto33';
     let tag = 3770;
@@ -96,22 +105,58 @@ module.exports = async function(msg) {
                 }
                 let red_output = "Red team: \n";
                 for (let i = 0; i < red_team.length; i++) {
-                    red_output = red_output.concat(`${red_team[i]} - ${red_team_agents[i]}\n`);
+                    if (i != red_team.length - 1) {
+                        red_output = red_output.concat(`${red_team[i]} - ${red_team_agents[i]}, `);
+                    } else {
+                        red_output = red_output.concat(`${red_team[i]} - ${red_team_agents[i]}\n`);
+                    }
                 }
                 let blue_output = "Blue team: \n";
                 for (let i = 0; i < blue_team.length; i++) {
-                    blue_output = blue_output.concat(`${blue_team[i]} - ${blue_team_agents[i]}\n`);
+                    if (i != blue_team.length - 1 ) {
+                        blue_output = blue_output.concat(`${blue_team[i]} - ${blue_team_agents[i]}, `);
+                    } else {
+                        blue_output = blue_output.concat(`${blue_team[i]} - ${blue_team_agents[i]}\n`);
+                    }
                 }
-                msg.channel.send(red_output + blue_output);
+                let personal_stats = "Your performance: \n";
                 
+                let casts = [json.data[match_num - 1].players.all_players[char_index].ability_casts.c_cast,
+                json.data[match_num - 1].players.all_players[char_index].ability_casts.q_cast,
+                json.data[match_num - 1].players.all_players[char_index].ability_casts.e_cast,
+                json.data[match_num - 1].players.all_players[char_index].ability_casts.x_cast];
+
+                personal_stats = personal_stats.concat(`C casts: ${casts[0]}, Q casts: ${casts[1]}, E casts: ${casts[2]}, X casts: ${casts[3]}\n`);
+
+
+                let stats = [json.data[match_num - 1].players.all_players[char_index].stats.score,
+                json.data[match_num - 1].players.all_players[char_index].stats.kills,
+                json.data[match_num - 1].players.all_players[char_index].stats.deaths,
+                json.data[match_num - 1].players.all_players[char_index].stats.assists];
+                
+                personal_stats = personal_stats.concat(`Score: ${stats[0]}\nKDA: ${stats[1]}/${stats[2]}/${stats[3]}\n`);
+                
+                let shots = [
+                json.data[match_num - 1].players.all_players[char_index].stats.bodyshots,
+                json.data[match_num - 1].players.all_players[char_index].stats.headshots,
+                json.data[match_num - 1].players.all_players[char_index].stats.legshots];
+                let total_shots = shots[0] + shots[1] + shots[2];
+                let bs_perc = formatAsPercent(100 * shots[0]/total_shots);
+                let hs_perc = formatAsPercent(100 * shots[1]/total_shots);
+                let fs_perc = formatAsPercent(100 * shots[2]/total_shots);
+
+                personal_stats = personal_stats.concat(`Headshots: ${shots[1]}(${hs_perc})\nBodyshots: ${shots[0]}(${bs_perc})\nFeetshots: ${shots[2]}(${fs_perc})\n`);
+                
+                let dmg = [
+                    json.data[match_num - 1].players.all_players[char_index].damage_made,
+                    json.data[match_num - 1].players.all_players[char_index].damage_received
+                ]
+                personal_stats = personal_stats.concat(`Damage inflicted/taken: ${dmg[0]}/${dmg[1]}`);
+
+                msg.channel.send(red_output + blue_output + personal_stats);
                 
             }
         }
-
-        // if match_num_used, return just that match
-
-        // if match_num_used = false, return last 5 matches
-
         return;
 
     }
