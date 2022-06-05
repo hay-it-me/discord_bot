@@ -2,6 +2,7 @@
 const fetch = require('node-fetch');
 
 const fs = require('fs');
+const { match } = require('assert');
 
 
 module.exports = async function(msg) {
@@ -67,10 +68,54 @@ module.exports = async function(msg) {
         let url = `https://api.henrikdev.xyz/valorant/v3/matches/ap/${account}/${tag}`;
         let response = await fetch(url);
         let json = await response.json();
-        if (json.status == 200) {
-            console.log(json.data.players.name);
+        // setting up variables for match history loop
+        let last_num = match_num;
+        if (match_num_used == false) {
+            last_num = 5;
         }
+        
+        if (json.status == 200) {
+            for (; match_num <= last_num; match_num++) {
+                let red_team = [];
+                let red_team_agents = [];
+                let blue_team = [];
+                let blue_team_agents = [];
+                let char_index;
+                for (let i = 0; i < json.data[match_num - 1].players.all_players.length; i++) {
+                    if (json.data[match_num - 1].players.all_players[i].team == "Red") {
+                        red_team.push(json.data[match_num - 1].players.all_players[i].name);
+                        red_team_agents.push(json.data[match_num - 1].players.all_players[i].character);
+                    }
+                    if (json.data[match_num - 1].players.all_players[i].team == "Blue") {
+                        blue_team.push(json.data[match_num - 1].players.all_players[i].name);
+                        blue_team_agents.push(json.data[match_num - 1].players.all_players[i].character);
+                    }
+                    if (json.data[match_num - 1].players.all_players[i].name == account) {
+                        char_index = i;
+                    }
+                }
+                let red_output = "Red team: \n";
+                for (let i = 0; i < red_team.length; i++) {
+                    red_output = red_output.concat(`${red_team[i]} - ${red_team_agents[i]}\n`);
+                }
+                let blue_output = "Blue team: \n";
+                for (let i = 0; i < blue_team.length; i++) {
+                    blue_output = blue_output.concat(`${blue_team[i]} - ${blue_team_agents[i]}\n`);
+                }
+                msg.channel.send(red_output + blue_output);
+                
+                
+            }
+        }
+
+        // if match_num_used, return just that match
+
+        // if match_num_used = false, return last 5 matches
+
+        return;
+
     }
+    msg.channel.send('Oops, that command was not recognised!');
     
 }
     
